@@ -245,7 +245,9 @@ body{
 	height: 160px;
 }
 
-
+#search-text{
+	width: 200px;
+}
 
 .searchbar-suggestion img{
 	width: 40px;
