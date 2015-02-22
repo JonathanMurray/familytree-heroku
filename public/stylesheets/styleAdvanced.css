@@ -21,8 +21,8 @@ body{
 
 
 #tree{
-	margin-left: 305px;
-	margin-top: 4em;
+	margin-left: 325px;
+	margin-top: 1em;
 	text-align: center;
 	overflow-x: scroll;
 }
@@ -234,7 +234,7 @@ body{
 
 
 #portrait-section{
-	margin-top: 4em;
+	margin-top: 3em;
 	text-align: center;
 }
 
