@@ -1,0 +1,12 @@
+run "neo4j start" - starts the neo4j db server
+run "npm start" - starts the node express server
+visit "http://213.103.195.165:3000/advanced" - assuming 213.103.195.165 is the server's ip
+
+to fix package problems:
+1. add dependancy to package.json
+2. run "sudu npm install -g"
+
+to fix database:
+1. go to cypherscripts directory
+2. run "cat setupPeople.cql | neo4j-shell"
+

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="stylesheets/style.css">
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+
+    <script type="text/template" id="tmpl-face-links">
+        
+       <ul>
+       <% _.each(people,function(person,key,array) { %>
+          <li class="face-link">
+            <a onclick="selectPerson('<%= person.id %>');">
+                <img src="images/<%= person.name %>.jpg" onerror="imgOnError($(this));">  
+                <p> <%= person.name %></p>
+            </a>
+          </li>
+       <% }); %>
+       </ul>
+    </script>
+
+    <script type="text/template" id="tmpl-siblings">
+        
+        <ul>
+            <% _.each(siblings, function(sibling) { %>
+               <li class="sibling <%= !_.isUndefined(sibling.selected) && sibling.selected? 'selected-sibling' : '' %>">
+                    <a onclick="selectSibling($(this), '<%= sibling.name %>', '<%= sibling.id %>');">
+                        <img src="images/<%= sibling.name %>.jpg" onerror="imgOnError($(this));">  
+                        <p><%= sibling.name %></p>
+                    </a>
+                </li>
+            <% }); %>
+        </ul>
+    </script>
+
+
+
+    <script type="text/javascript">
+
+        var idToPerson = function(id){
+            return people[id];
+        }
+
+        function selectSibling(siblingAnchor, name, id){
+            if(siblingAnchor.parent().hasClass("selected-sibling")){   
+                
+            }else{
+                siblingAnchor.parent().siblings().removeClass('selected-sibling'); 
+                siblingAnchor.parent().addClass('selected-sibling');   
+                children = _.map(people[id].PARENT_TO, idToPerson);
+                $("#child-links").html(_.template(tmplFaceLinks,{people:children}));
+            }
+        }
+
+        function selectPerson(id){
+            people[selectedPerson].selected = false; //Reset any previous selection
+            selectedPerson = id;
+            people[id].selected = true;
+
+            person = people[id];
+            parents = _.map(person.CHILD_TO, idToPerson);
+            if(parents.length == 0){
+                siblings = [person];
+            }else{
+                siblings = _.map(parents[0].PARENT_TO, idToPerson);
+            }
+            children = _.map(person.PARENT_TO, idToPerson);
+
+            $("#parent-links").html(_.template(tmplFaceLinks, {people:parents}));
+            $("#siblings").html(_.template(tmplSiblings,{siblings:siblings}));
+            $("#child-links").html(_.template(tmplFaceLinks,{people:children}));
+        }
+
+        function imgOnError(img){
+            img.onerror = null; 
+            img.attr('src', "images/avatar.jpg");
+        }
+
+        var tmplFaceLinks = $("#tmpl-face-links").html();
+        var tmplSiblings = $("#tmpl-siblings").html();
+
+
+        $(document).ready(function(){
+            console.log("document.ready()");
+            $.ajax({
+                 url:"getpeople/Josef",
+                 dataType: 'jsonp', // Notice! JSONP <-- P (lowercase)
+                 success:function(json){
+                    console.log("ajax.success()");
+                    selectedPerson = json["selectedPerson"];
+                    console.log("selectedPerson: " + selectedPerson);
+                    people = json["people"];
+                    selectPerson(selectedPerson);
+                 },
+                 error:function(){
+                     alert("Error loading data from: " + url);
+                 }      
+            });
+            
+        });
+    </script>
+</head>
+
+<body id="main">
+    <div class="face-links" id="parent-links"></div>
+    <div id="siblings"></div>
+    <div class="face-links" id="child-links"></div>
+</body>
+
+</html>

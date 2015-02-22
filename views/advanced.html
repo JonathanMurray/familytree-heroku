@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html >
+
+<head>
+    <link rel="stylesheet" type="text/css" href="stylesheets/styleAdvanced.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script type="text/javascript" src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="javascripts/autocomplete.html.js"></script>
+
+    <script type="text/javascript" src="javascripts/script.js"></script>
+
+
+    <script type="text/template" id="tmpl-subtree">
+       <div class="subtree <%= person.PARENT_TO.length == 0 ? 'leaf' : '' %>">
+            <%= depth == 1 && renderUpArrow? "<img class='up-arrow' onclick='clickUpArrow();' src='images/up-arrow.png'/>" : "" %>
+            <div class="subtree-root">
+
+                <% if(person.PARENT_TO.length == 0 || person.MARRIED_TO.length == 0) { 
+                    print(tmplFace({person:person, isPartner:false}));
+                } else { %>
+
+                    <div class="face-pair">
+                    <%
+                        print(tmplFace({person:person, isPartner:false}));
+                        print(tmplFace({person:idToPerson(person.MARRIED_TO), isPartner:true}));
+                    %>
+                    </div>
+
+                <% } %>
+
+            </div>
+
+            <% _.each(_.map(person.PARENT_TO, idToPerson), function(child){
+                print(tmplSubtree({renderUpArrow: renderUpArrow, depth:depth+1, person:child, tmplSubtree:tmplSubtree, tmplFace:tmplFace}));
+            }); %>
+
+
+       </div>
+    </script>
+
+    <script type="text/template" id="tmpl-face">
+        <span class="face" data-personid="<%= person.id %>">
+            <a onmouseout="unhoverPerson($(this));" onmouseover="hoverPerson($(this), <%= person.id %>);"  onclick="clickPerson($(this),'<%= person.id %>');">
+                <img src="<%= person.imageSrc %>">  
+                <p><%= person.name %></p>
+            </a>
+        </span>
+    </script>
+
+    <script type="text/template" id="tmpl-miniface">
+        <span 
+            class="mini-face"
+            onclick="clickMiniPerson(<%= person.id %>);"
+            data-personid="<%= person.id %>"
+            title="<%= person.name %>">
+        </span>
+    </script>
+
+    <script type="text/template" id="tmpl-portrait">
+        <img class="portrait" src="<%= person.imageSrc %>">  
+        <p class="portrait-text"><%= person.name %></p>
+    </script>
+
+    <script type="text/template" id="tmpl-search-suggestion">
+        <span class="searchbar-suggestion">
+            <img src="<%= person.imageSrc %>">  
+            <span><h3><%= person.name %></h3></span>
+        </span> 
+    </script>
+
+
+
+
+    <script type="text/javascript">
+
+        $.ui.autocomplete.prototype.options.html = true;
+
+
+        var tmplSubtree = $("#tmpl-subtree").html();
+        var tmplFace = $("#tmpl-face").html();
+        var tmplMiniFace = $("#tmpl-miniface").html();
+        var tmplPortrait = $("#tmpl-portrait").html();
+        var tmplSearchSuggestion = $("#tmpl-search-suggestion").html();
+
+        $(function(){
+            $.ajax({
+                 url:"getpeople/Carl-Adolf",
+                 dataType: 'jsonp', // Notice! JSONP <-- P (lowercase)
+                 success:function(json){
+                    console.log("getpeople: ajax.success()");
+                    
+                    people = json["people"];
+                    var selectedPerson = people[json["selectedPerson"]];
+                    renderMiniFrom(people[json["rootPerson"]]);
+
+                    renderFrom(selectedPerson);
+                    selectPersonInMiniTree(selectedPerson);
+                    
+                    $("#search-text").autocomplete({
+                        source: _.map(people, function(person, id, list){
+                            return {
+                                label: _.template(tmplSearchSuggestion, {person:person}),
+                                value: person.name + "_" + person.id
+                            };
+                        })
+                    });
+
+                 },
+                 error:function(){
+                     alert("getpeople: Error loading data");
+                 }      
+            });
+            
+        });
+    </script>
+
+</head>
+
+<body id="main">
+    <div id="side-bar">
+        <form id="searchPerson" onsubmit="searchPerson(); return false;">
+            <input id="search-text" type="search" name="personName" placeholder="Sök efter en person...">
+            <input type="submit" value="Sök">
+        </form>
+        <div id="mini-tree"></div>
+        <div id="portrait-section"></div>
+    </div>
+
+    <div id="tree"></div>
+</body>
+
+</html>
