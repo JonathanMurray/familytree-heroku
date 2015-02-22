@@ -41,6 +41,9 @@ router.get('/getpeople/:name', function(req, res) {
     waitingForImg = 0;
     isSendingResults = false;
 
+    res.jsonp(allResults); //TODO
+    return; // TODO 
+
 
     var queryDb = function(context, query, processResults){
         waitingForDB ++;
