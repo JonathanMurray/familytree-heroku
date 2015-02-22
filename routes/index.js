@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var neo4j = require('neo4j-js');
-var neo4jurl = 'http://localhost:7474/db/data/';
+var neo4j = require('neo4j');
+var graph = new neo4j.GraphDatabase("http://familytree:8sJbZ3fktKLXbK5RKQrd@familytree.sb02.stations.graphenedb.com:24789");
 var _und = require("underscore");
 var http = require('http');
 
@@ -41,28 +41,20 @@ router.get('/getpeople/:name', function(req, res) {
     waitingForImg = 0;
     isSendingResults = false;
 
-    res.jsonp(allResults); //TODO
-    return; // TODO 
 
 
     var queryDb = function(context, query, processResults){
         waitingForDB ++;
-	console.log("querying db...");
-        neo4j.connect(neo4jurl, function (err, graph) {
-            if (err){
-                throw err;
+	    console.log("querying db...");
+
+        graph.query(query, context, function(error, results){
+            if(error){
+                console.log(error);
             }else{
-                graph.query(query, context, function(error, results){
-                    if(error){
-                        console.log(error);
-                    }else{
-                        // console.log(results);
-                       
-                        processResults(results);
-                        waitingForDB --;
-                        notifyDone();
-                    }
-                });
+                // console.log(results);
+                processResults(results);
+                waitingForDB --;
+                notifyDone();
             }
         });
     }
@@ -97,7 +89,7 @@ router.get('/getpeople/:name', function(req, res) {
             personData[childRelation] = [];
             setImageSrc(personData);
             allResults["people"][id] = personData;
-            if(personData.name === "Adolf"){ //TODO Must change when adding even older people
+            if(personData.name === "Donald"){ //TODO Must change when adding even older people
                 allResults.rootPerson = personData.id;
             }
         }
@@ -129,16 +121,26 @@ router.get('/getpeople/:name', function(req, res) {
 
     function addRelation(person, relation){
         try{
-            allResults["people"][person.id][relation.type].push(relation.end);
+            allResults["people"][person.id][relation.type].push(relation.end.id);
             if(relation.type === marriageRelation){
-                allResults["people"][relation.end][relation.type].push(person.id);
+                allResults["people"][relation.end.id][marriageRelation].push(person.id);
             }else if(relation.type === parentRelation){
-                allResults["people"][relation.end][childRelation].push(person.id);
+                allResults["people"][relation.end.id][childRelation].push(person.id);
             }
         }catch(err){
+            console.log("ERROR:  ");
+            console.log("_---------------------------------__");
+            console.log("_---------------------------------__");
+            console.log("_---------------------------------__");
+            console.log("_---------------------------------__");
+            console.log("_---------------------------------__");
+            console.log("_---------------------------------__");
             console.log(err);
+
             console.log(person);
             console.log(relation);
+
+            console.log("\n\n\n\n\n");
         }
     }
 
@@ -146,6 +148,7 @@ router.get('/getpeople/:name', function(req, res) {
         {},
         "MATCH (person:Person) OPTIONAL MATCH (person:Person)-[relation]->() RETURN person,relation;",
         function(results){
+            console.log(results);
             _und.each(results, function(result){
                 person = result.person;
                 addPerson(person.id, person.data);
