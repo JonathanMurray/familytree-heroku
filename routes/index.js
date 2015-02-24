@@ -89,14 +89,25 @@ router.get('/getpeople/:name', function(req, res) {
             personData[childRelation] = [];
             setImageSrc(personData);
             allResults["people"][id] = personData;
-            if(personData.name === "Donald"){ //TODO Must change when adding even older people
+            if(personData.name === "Clancy"){ //TODO Must change when adding even older people
                 allResults.rootPerson = personData.id;
             }
         }
     }
 
     function setImageSrc(personData){
+
         var imageSrc = "images/" + personData.name + ".jpg";
+
+        var files = fs.readdirSync("public/images");
+        _und.each(files, function(file){
+            var re = new RegExp(personData.name + "\....");
+            console.log(file);
+            if(file.match(re) !== null){
+                imageSrc = "images/" + file;
+            }
+        });
+        
         waitingForImg ++;
         fs.exists("public/" + imageSrc, function(exists) {
             if (exists) {
@@ -129,11 +140,6 @@ router.get('/getpeople/:name', function(req, res) {
             }
         }catch(err){
             console.log("ERROR:  ");
-            console.log("_---------------------------------__");
-            console.log("_---------------------------------__");
-            console.log("_---------------------------------__");
-            console.log("_---------------------------------__");
-            console.log("_---------------------------------__");
             console.log("_---------------------------------__");
             console.log(err);
 
